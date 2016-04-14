@@ -1,4 +1,4 @@
-package model;
+package com.league;
 
 import java.util.Comparator;
 import java.util.HashMap;
