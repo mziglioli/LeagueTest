@@ -1,13 +1,19 @@
-package com.league;
+package model;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LeagueTable {
 
 	private List<LeagueTableEntry> entries;
+
+	Comparator<LeagueTableEntry> comparator = Comparator.comparing(LeagueTableEntry::getPoints).reversed()
+			.thenComparing(LeagueTableEntry::getGoalDifference).reversed().thenComparing(LeagueTableEntry::getGoalsFor)
+			.reversed().thenComparing(LeagueTableEntry::getTeamName);
 
 	/**
 	 * Create a league table from the supplied list of match results
@@ -63,6 +69,7 @@ public class LeagueTable {
 						map.put(team.getTeamName(), team);
 					}
 				});
+				entries = map.values().stream().sorted(comparator).collect(Collectors.toList());
 			}
 		}
 
