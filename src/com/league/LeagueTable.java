@@ -25,54 +25,58 @@ public class LeagueTable {
 			final Map<String, LeagueTableEntry> map = new HashMap<>();
 			try (Stream<Match> stream = matches.stream()) {
 				stream.forEach(m -> {
-					if (!m.getHomeTeam().equals(m.getAwayTeam())) {
-						LeagueTableEntry homeTeam = map.getOrDefault(m.getHomeTeam(),
-								new LeagueTableEntry(m.getHomeTeam()));
-						LeagueTableEntry awayTeam = map.getOrDefault(m.getAwayTeam(),
-								new LeagueTableEntry(m.getAwayTeam()));
+					LeagueTableEntry homeTeam = map.getOrDefault(m.getHomeTeam(),
+							new LeagueTableEntry(m.getHomeTeam()));
+					LeagueTableEntry awayTeam = map.getOrDefault(m.getAwayTeam(),
+							new LeagueTableEntry(m.getAwayTeam()));
 
-						homeTeam.addPlayed();
-						awayTeam.addPlayed();
+					handleMatch(homeTeam, awayTeam, m);
 
-						int diff = Math.abs(m.getHomeScore() - m.getAwayScore());
-
-						homeTeam.addGoalsFor(m.getHomeScore());
-						homeTeam.addGoalsAgainst(m.getAwayScore());
-						homeTeam.addGoalDifference(diff);
-
-						awayTeam.addGoalsFor(m.getAwayScore());
-						awayTeam.addGoalsAgainst(m.getHomeScore());
-						awayTeam.addGoalDifference(diff);
-
-						if (m.getHomeScore() > m.getAwayScore()) {
-							homeTeam.addWon();
-							homeTeam.addPoints(3);
-							awayTeam.addLost();
-						} else if (m.getHomeScore() < m.getAwayScore()) {
-							homeTeam.addLost();
-							awayTeam.addWon();
-							awayTeam.addPoints(3);
-						} else {
-							homeTeam.addDrawn();
-							homeTeam.addPoints(1);
-							awayTeam.addDrawn();
-							awayTeam.addPoints(1);
-						}
-
-						map.put(homeTeam.getTeamName(), homeTeam);
-						map.put(awayTeam.getTeamName(), awayTeam);
-					} else {
-						LeagueTableEntry team = map.getOrDefault(m.getHomeTeam(),
-								new LeagueTableEntry(m.getHomeTeam()));
-						team.addPlayed();
-						team.addPoints(3);
-						map.put(team.getTeamName(), team);
-					}
+					map.put(homeTeam.getTeamName(), homeTeam);
+					map.put(awayTeam.getTeamName(), awayTeam);
 				});
-				entries = map.values().stream().sorted(comparator).collect(Collectors.toList());
 			}
+			entries = map.values().stream().sorted(comparator).collect(Collectors.toList());
 		}
 
+	}
+
+	private void handleMatch(LeagueTableEntry homeTeam, LeagueTableEntry awayTeam, Match match) {
+		homeTeam.addPlayed();
+		awayTeam.addPlayed();
+
+		handleGoals(homeTeam, match.getHomeScore(), match.getAwayScore());
+		handleGoals(awayTeam, match.getAwayScore(), match.getHomeScore());
+
+		handleResult(homeTeam, awayTeam, match);
+	}
+
+	private void handleGoals(LeagueTableEntry team, int goalsFor, int goalsAgainst) {
+		team.addGoalsFor(goalsFor);
+		team.addGoalsAgainst(goalsAgainst);
+		team.addGoalDifference(Math.abs(goalsFor - goalsAgainst));
+	}
+
+	private void handleResult(LeagueTableEntry homeTeam, LeagueTableEntry awayTeam, Match match) {
+		if (match.getHomeScore() > match.getAwayScore()) {
+			handleWon(homeTeam, awayTeam);
+		} else if (match.getHomeScore() < match.getAwayScore()) {
+			handleWon(awayTeam, homeTeam);
+		} else {
+			handleDrawn(homeTeam);
+			handleDrawn(awayTeam);
+		}
+	}
+
+	private void handleWon(LeagueTableEntry won, LeagueTableEntry lost) {
+		won.addWon();
+		won.addPoints(3);
+		lost.addLost();
+	}
+
+	private void handleDrawn(LeagueTableEntry team) {
+		team.addDrawn();
+		team.addPoints(1);
 	}
 
 	/**
